@@ -1,3 +1,7 @@
 # Local Worker secrets for `pnpm dev` (copy to .dev.vars, which is gitignored).
-# In production these are set with: npx wrangler secret put OPENAI_API_KEY
-OPENAI_API_KEY=your-api-key
+# In production these are set with: npx wrangler secret put OPENROUTER_API_KEY
+OPENROUTER_API_KEY=your-api-key
+
+# Password asked for on /authorize when ChatGPT or Claude connects to the MCP server.
+# In production: npx wrangler secret put MCP_OWNER_PASSWORD --env production
+MCP_OWNER_PASSWORD=change-me

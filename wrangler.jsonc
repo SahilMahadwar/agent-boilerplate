@@ -3,19 +3,43 @@
   "name": "mastra-hono",
   "main": "./src/index.ts",
   "compatibility_date": "2026-10-09",
-  "compatibility_flags": ["nodejs_compat"],
+  // global_fetch_strictly_public is required by the OAuth provider for CIMD clients (ChatGPT).
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "assets": {
     "not_found_handling": "single-page-application",
-    "run_worker_first": ["/api/*"]
+    "run_worker_first": [
+      "/api/*",
+      "/authorize",
+      "/token",
+      "/register",
+      "/.well-known/*",
+    ],
   },
+
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "mastra-hono",
-      "database_id": "PLACEHOLDER_RUN_WRANGLER_D1_CREATE"
-    }
+      "database_name": "mastra-hono-local",
+      "database_id": "local",
+    },
   ],
+  // OAuth clients, grants and tokens for the MCP endpoint (see docs/mcp.md).
+  "kv_namespaces": [{ "binding": "OAUTH_KV", "id": "local" }],
   "observability": {
-    "enabled": true
-  }
+    "enabled": true,
+  },
+
+  "env": {
+    "production": {
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "mastra-hono-prd",
+          "database_id": "d7061e26-e533-414b-a8e2-3fc2c6576273",
+        },
+      ],
+      // Create with: npx wrangler kv namespace create OAUTH_KV --env production
+      "kv_namespaces": [{ "binding": "OAUTH_KV", "id": "2bbd20ae90284a9789bcf0fe77cf280e" }],
+    },
+  },
 }

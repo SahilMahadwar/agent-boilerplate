@@ -34,6 +34,12 @@ assets and Mastra is served by Hono under `/api/*`. There is no Node server.
   …) instead of hard-coded colors, so light and dark both work
 - The `@` alias is declared in three places that must agree: `vite.config.ts`, `tsconfig.client.json`
   and `components.json`. TypeScript 7 removed `baseUrl`, so `paths` are relative to the config file
+- MCP: exposed tools/agents/workflows live in `src/mastra/mcp/` (see `docs/mcp.md`). `/api/mcp/*`
+  is behind OAuth (`@cloudflare/workers-oauth-provider`, `OAUTH_KV`); only the endpoint in
+  `MCP_PATH` (`src/index.ts`) is served. Expose agents with `agentTool()`, not MCPServer's `agents`
+  option, and keep `jsonSchemaValidator: new CfWorkerJsonSchemaValidator()`: Ajv's `new Function`
+  is forbidden on Workers. After changing deps, clear `node_modules/.vite` if the dev server
+  serves stale code
 - D1 does not support Mastra's observability domain — do not add `MastraStorageExporter` back
   without first moving traces to a supported store
 

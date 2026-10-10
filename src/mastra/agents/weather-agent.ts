@@ -5,6 +5,8 @@ import { weatherTool } from '../tools/weather-tool';
 export const weatherAgent = new Agent({
   id: 'weather-agent',
   name: 'Weather Agent',
+  description:
+    'Answers weather questions for a city and suggests activities based on the forecast.',
   instructions: `You are a helpful weather assistant that provides accurate weather information and can help planning activities based on the weather.
 
 Your primary function is to help users get weather details for specific locations. When responding:
@@ -17,7 +19,7 @@ Your primary function is to help users get weather details for specific location
 - If the user asks for activities, respond in the format they request.
 
 Use the weatherTool to fetch current weather data.`,
-  model: 'openai/gpt-5-mini',
+  model: 'openrouter/openai/gpt-5-mini',
   tools: { weatherTool },
   memory: new Memory(),
 });
