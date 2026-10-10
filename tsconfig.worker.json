@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "lib": ["ESNext"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "verbatimModuleSyntax": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "hono/jsx",
+    // Runtime + binding types come from the generated worker-configuration.d.ts
+    // (see the `cf-typegen` script); do not also pull in @cloudflare/workers-types.
+    "types": []
+  },
+  "include": ["src", "worker-configuration.d.ts"]
+}
