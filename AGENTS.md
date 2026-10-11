@@ -40,6 +40,19 @@ assets and Mastra is served by Hono under `/api/*`. There is no Node server.
   option, and keep `jsonSchemaValidator: new CfWorkerJsonSchemaValidator()`: Ajv's `new Function`
   is forbidden on Workers. After changing deps, clear `node_modules/.vite` if the dev server
   serves stale code
+- Auth: Better Auth (`getAuth()` in `src/auth.ts`, Google only) at `AUTH_BASE_PATH`
+  (`/api/better-auth`; `/api/auth/*` belongs to Mastra). Sign-up is closed: the
+  `databaseHooks` reject any email not in `AUTH_ALLOWED_EMAILS` (fails closed if unset). Its
+  tables are `app_user` / `app_session` / `app_account` / `app_verification`
+  (`src/db/schema/auth.ts`). Build the instance with `getAuth()` inside a request; module-scope
+  consumers get the lazy `auth` proxy. The SPA gates `_dashboard` on `sessionQuery`
+  (`client/src/lib/auth-client.ts`) and redirects to `/login`. Mastra `/api/*` uses
+  `AppAuthProvider` (`src/mastra/auth.ts`, extends `MastraAuthBetterAuth`), which accepts the
+  session or a key from `API_KEYS` (`Authorization: Bearer`, `X-API-Key`, `?apiKey=`) and keeps
+  `MCP_PATH` public (OAuth already checked it); `mapUserToResourceId` pins Mastra memory to
+  the single `owner` resource. oRPC procedures use `protectedProcedure` (session
+  or API key); only health checks use `publicProcedure`. The MCP OAuth flow (`/authorize`,
+  `MCP_OWNER_PASSWORD`) is separate and unchanged
 - D1 does not support Mastra's observability domain — do not add `MastraStorageExporter` back
   without first moving traces to a supported store
 - Custom (non-Mastra) endpoints are **oRPC** procedures, not Hono routes. The router is the

@@ -5,3 +5,21 @@ OPENROUTER_API_KEY=your-api-key
 # Password asked for on /authorize when ChatGPT or Claude connects to the MCP server.
 # In production: npx wrangler secret put MCP_OWNER_PASSWORD --env production
 MCP_OWNER_PASSWORD=change-me
+
+# Dashboard sign-in (Better Auth + Google). Sign-up is closed: only these emails get an account.
+# Google OAuth client redirect URI: <BETTER_AUTH_URL>/api/better-auth/callback/google
+# BETTER_AUTH_URL is a `vars` entry in production (wrangler.jsonc); the rest are secrets:
+# npx wrangler secret put BETTER_AUTH_SECRET --env production (same for the others)
+BETTER_AUTH_URL=http://localhost:5173
+BETTER_AUTH_SECRET=generate-with-openssl-rand-base64-32
+GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your-client-secret
+AUTH_ALLOWED_EMAILS=you@example.com
+
+# Comma-separated API keys for Mastra routes (/api/agents, …) and oRPC (/api/rpc, /api/openapi),
+# sent as `Authorization: Bearer <key>` or `X-API-Key: <key>`.
+# In production: npx wrangler secret put API_KEYS --env production
+API_KEYS=change-me
+
+# Optional: sends traces to Mastra Cloud (the exporter stays off without it).
+# MASTRA_PLATFORM_ACCESS_TOKEN=

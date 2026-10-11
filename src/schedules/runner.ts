@@ -1,6 +1,14 @@
 import type { Schedule, ScheduleRun } from "../db/schema/index.js";
 import { mastra } from "../mastra/index.js";
-import { claimFire, finishRun, listDueSchedules, startRun } from "./store.js";
+import {
+  claimFire,
+  failStaleRuns,
+  finishRun,
+  listDueSchedules,
+  startRun,
+} from "./store.js";
+
+const MAX_RUN_MS = 15 * 60_000;
 
 const describe = (error: unknown) =>
   error instanceof Error ? error.message : String(error);
@@ -51,6 +59,7 @@ export async function executeSchedule(
 /** Called by the Worker's cron trigger (every minute, see wrangler.jsonc). */
 export async function runDueSchedules() {
   const now = Date.now();
+  await failStaleRuns(now - MAX_RUN_MS);
   const due = await listDueSchedules(now);
   await Promise.all(
     due.map(async (schedule) => {

@@ -1,9 +1,9 @@
 import { z } from "zod";
 import { mastra } from "../../mastra/index.js";
-import { publicProcedure } from "../orpc.js";
+import { protectedProcedure } from "../orpc.js";
 
 export const exampleRouter = {
-  weather: publicProcedure
+  weather: protectedProcedure
     .input(z.object({ city: z.string().min(1) }))
     .handler(async ({ input }) => {
       const agent = mastra.getAgent("weatherAgent");

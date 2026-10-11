@@ -4,19 +4,26 @@ import {
   type HonoVariables,
   MastraServer,
 } from "@mastra/hono";
+import { env } from "cloudflare:workers";
 import { type Context, Hono } from "hono";
+import { AUTH_BASE_PATH, getAuth, MCP_PATH } from "./auth.js";
 import { mastra } from "./mastra/index.js";
 import { oauth } from "./routes/oauth.js";
 import { openApiHandler, rpcHandler } from "./rpc/index.js";
 import type { RpcContext } from "./rpc/orpc.js";
 import { runDueSchedules } from "./schedules/runner.js";
 
-// The MCP endpoint ChatGPT and Claude connect to. Only this path is served from
-// `/api/mcp/*`, and it requires an OAuth access token (see `providerFor`).
-const MCP_PATH = "/api/mcp/weather-mcp/mcp";
+// MCP_PATH (src/auth.ts) is the MCP endpoint ChatGPT and Claude connect to. Only
+// this path is served from `/api/mcp/*`, and it requires an OAuth access token
+// (see `providerFor`).
 
 const app = new Hono<{ Bindings: HonoBindings; Variables: HonoVariables }>();
 const server = new MastraServer({ app, mastra });
+
+// Better Auth (Google sign-in, sessions). Registered before Mastra's routes, which
+// are added on the first request. The SPA gates itself on the session; oRPC uses
+// `protectedProcedure` and Mastra its own `server.auth` (src/mastra/auth.ts).
+app.on(["GET", "POST"], `${AUTH_BASE_PATH}/*`, (c) => getAuth().handler(c.req.raw));
 
 // Mastra also registers MCP side routes (`/api/mcp/:serverId/tools/...`, `/sse`, the
 // registry) that would bypass OAuth. Requests reach this app with a valid token only
@@ -54,6 +61,14 @@ app.route("/", oauth);
 
 app.get("/api/health", (c) =>
   c.json({ ok: true, time: new Date().toISOString() }),
+);
+
+// Every request runs the Worker first; anything no route matched outside `/api`
+// is a static asset or an SPA route.
+app.notFound((c) =>
+  c.req.path.startsWith("/api/")
+    ? c.json({ error: "Not found" }, 404)
+    : env.ASSETS.fetch(c.req.raw),
 );
 
 // Route registration is deferred to the first request: a Worker may not perform

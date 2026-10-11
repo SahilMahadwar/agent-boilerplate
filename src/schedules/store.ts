@@ -134,6 +134,21 @@ export async function finishRun(id: string, result: { output: unknown } | { erro
     .where(eq(appScheduleRuns.id, id));
 }
 
+/**
+ * Marks runs still `running` since before `cutoff` as failed. A Worker that is
+ * stopped mid-run never calls finishRun(), which would leave the row running forever.
+ */
+export async function failStaleRuns(cutoff: number) {
+  await db()
+    .update(appScheduleRuns)
+    .set({
+      status: "failed",
+      finishedAt: Date.now(),
+      error: "Run did not finish (the Worker was stopped)",
+    })
+    .where(and(eq(appScheduleRuns.status, "running"), lte(appScheduleRuns.startedAt, cutoff)));
+}
+
 export function listRuns(scheduleId: string, limit: number) {
   return db()
     .select()

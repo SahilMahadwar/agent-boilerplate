@@ -88,7 +88,7 @@ or expose your dev server through a tunnel (e.g. `cloudflared tunnel --url http:
 1. Create the KV namespace and put its id in `wrangler.jsonc` → `env.production.kv_namespaces`:
    `npx wrangler kv namespace create OAUTH_KV --env production`
 2. Set the password: `npx wrangler secret put MCP_OWNER_PASSWORD --env production`
-3. `pnpm deploy`
+3. `pnpm run deploy`
 
 ## Connecting clients
 

@@ -38,3 +38,6 @@ dist/
 
 # typescript
 *.tsbuildinfo
+
+# local reference projects (not part of the template)
+example/

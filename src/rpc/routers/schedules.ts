@@ -10,7 +10,7 @@ import {
   startRun,
   updateSchedule,
 } from "../../schedules/store.js";
-import { publicProcedure } from "../orpc.js";
+import { protectedProcedure } from "../orpc.js";
 
 const status = z.enum(["active", "paused"]);
 
@@ -39,21 +39,21 @@ const badRequest = (error: unknown) =>
   });
 
 export const schedulesRouter = {
-  list: publicProcedure.handler(() => listSchedules()),
+  list: protectedProcedure.handler(() => listSchedules()),
 
-  get: publicProcedure.input(byId).handler(async ({ input }) => {
+  get: protectedProcedure.input(byId).handler(async ({ input }) => {
     const schedule = await getSchedule(input.id);
     if (!schedule) throw notFound(input.id);
     return schedule;
   }),
 
-  create: publicProcedure.input(scheduleInput).handler(({ input }) =>
+  create: protectedProcedure.input(scheduleInput).handler(({ input }) =>
     createSchedule(input).catch((error) => {
       throw badRequest(error);
     }),
   ),
 
-  update: publicProcedure
+  update: protectedProcedure
     .input(byId.extend({ patch: scheduleInput.partial() }))
     .handler(async ({ input }) => {
       const schedule = await updateSchedule(input.id, input.patch).catch((error) => {
@@ -63,7 +63,7 @@ export const schedulesRouter = {
       return schedule;
     }),
 
-  setStatus: publicProcedure
+  setStatus: protectedProcedure
     .input(byId.extend({ status }))
     .handler(async ({ input }) => {
       const schedule = await updateSchedule(input.id, { status: input.status });
@@ -71,13 +71,13 @@ export const schedulesRouter = {
       return schedule;
     }),
 
-  remove: publicProcedure.input(byId).handler(async ({ input }) => {
+  remove: protectedProcedure.input(byId).handler(async ({ input }) => {
     await deleteSchedule(input.id);
     return { ok: true };
   }),
 
   /** Fires the schedule now; the run continues in the background. */
-  runNow: publicProcedure.input(byId).handler(async ({ input, context }) => {
+  runNow: protectedProcedure.input(byId).handler(async ({ input, context }) => {
     const schedule = await getSchedule(input.id);
     if (!schedule) throw notFound(input.id);
     const runId = await startRun(schedule.id, "manual");
@@ -85,7 +85,7 @@ export const schedulesRouter = {
     return { runId };
   }),
 
-  runs: publicProcedure
+  runs: protectedProcedure
     .input(byId.extend({ limit: z.number().int().min(1).max(100).default(20) }))
     .handler(({ input }) => listRuns(input.id, input.limit)),
 };

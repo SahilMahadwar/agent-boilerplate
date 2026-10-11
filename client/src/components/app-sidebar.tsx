@@ -1,6 +1,13 @@
-import { useQuery } from "@tanstack/react-query";
-import { Link, useLocation } from "@tanstack/react-router";
-import { BookOpen, ChevronRight, LayoutDashboard, RotateCw, Sparkles } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link, useLocation, useNavigate } from "@tanstack/react-router";
+import {
+  BookOpen,
+  ChevronRight,
+  LayoutDashboard,
+  LogOut,
+  RotateCw,
+  Sparkles,
+} from "lucide-react";
 import { ItemLink } from "@/components/item-link";
 import {
   Collapsible,
@@ -25,6 +32,7 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { type Section, sections } from "@/configs/navigation";
+import { authClient, sessionQuery } from "@/lib/auth-client";
 import { agentsQuery, toolsQuery, workflowsQuery } from "@/lib/mastra-queries";
 import { orpc } from "@/lib/orpc";
 
@@ -110,6 +118,35 @@ function SectionMenu({ section }: { section: Section }) {
   );
 }
 
+function SignOut() {
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const { data: session } = useQuery(sessionQuery);
+  const signOut = useMutation({
+    mutationFn: async () => {
+      const { error } = await authClient.signOut();
+      if (error) throw new Error(error.message ?? error.statusText);
+    },
+    onSuccess: async () => {
+      queryClient.clear();
+      await navigate({ to: "/login" });
+    },
+  });
+
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton
+        tooltip="Sign out"
+        disabled={signOut.isPending}
+        onClick={() => signOut.mutate()}
+      >
+        <LogOut />
+        <span className="truncate">{session?.user.email ?? "Sign out"}</span>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  );
+}
+
 export function AppSidebar() {
   const { pathname } = useLocation();
 
@@ -169,6 +206,7 @@ export function AppSidebar() {
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
+          <SignOut />
         </SidebarMenu>
       </SidebarFooter>
       <SidebarRail />

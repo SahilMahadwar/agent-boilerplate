@@ -6,25 +6,21 @@ import {
   Observability,
   SensitiveDataFilter,
 } from "@mastra/observability";
-import { env } from "cloudflare:workers";
+import { d1 } from "../db/index.js";
 import { weatherAgent } from "./agents/weather-agent";
+import { AppAuthProvider } from "./auth";
 import { weatherMcpServer } from "./mcp/weather-mcp-server";
 import { weatherTool } from "./tools/weather-tool";
 import { weatherWorkflow } from "./workflows/weather-workflow";
-
-const lazyDB = new Proxy({} as D1Database, {
-  get(_, prop) {
-    const value = Reflect.get(env.DB, prop);
-    return typeof value === "function" ? value.bind(env.DB) : value;
-  },
-});
 
 export const mastra = new Mastra({
   workflows: { weatherWorkflow },
   agents: { weatherAgent },
   tools: { weatherTool },
   mcpServers: { weatherMcpServer },
-  storage: new D1Store({ id: "mastra-storage", binding: lazyDB }),
+  // A Better Auth session or an API key on every Mastra route except MCP_PATH (src/mastra/auth.ts).
+  server: { auth: new AppAuthProvider() },
+  storage: new D1Store({ id: "mastra-storage", binding: d1 }),
   logger: new ConsoleLogger({
     name: "Mastra",
     level: "info",

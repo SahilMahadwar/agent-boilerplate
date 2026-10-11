@@ -1,8 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { DashboardLayout } from "@/layouts/dashboard-layout";
+import { sessionQuery } from "@/lib/auth-client";
 
 export const Route = createFileRoute("/_dashboard")({
-  // Gate the dashboard here once the project has auth, e.g.
-  // beforeLoad: async () => { if (!(await getSession())) throw redirect({ to: "/login" }) },
+  beforeLoad: async ({ context }) => {
+    const session = await context.queryClient.ensureQueryData(sessionQuery);
+    if (!session) throw redirect({ to: "/login" });
+    return { session };
+  },
   component: DashboardLayout,
 });
