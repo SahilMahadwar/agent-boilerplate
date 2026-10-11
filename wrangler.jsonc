@@ -21,10 +21,13 @@
       "binding": "DB",
       "database_name": "mastra-hono-local",
       "database_id": "local",
+      "migrations_dir": "migrations",
     },
   ],
   // OAuth clients, grants and tokens for the MCP endpoint (see docs/mcp.md).
   "kv_namespaces": [{ "binding": "OAUTH_KV", "id": "local" }],
+  // Fires due schedules every minute (src/schedules/runner.ts).
+  "triggers": { "crons": ["* * * * *"] },
   "observability": {
     "enabled": true,
   },
@@ -36,6 +39,7 @@
           "binding": "DB",
           "database_name": "mastra-hono-prd",
           "database_id": "d7061e26-e533-414b-a8e2-3fc2c6576273",
+          "migrations_dir": "migrations",
         },
       ],
       // Create with: npx wrangler kv namespace create OAUTH_KV --env production

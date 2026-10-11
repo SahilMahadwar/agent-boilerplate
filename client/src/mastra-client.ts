@@ -5,5 +5,3 @@ import { MastraClient } from "@mastra/client-js";
 export const mastraClient = new MastraClient({
   baseUrl: window.location.origin,
 });
-
-export const weatherAgent = mastraClient.getAgent("weather-agent");

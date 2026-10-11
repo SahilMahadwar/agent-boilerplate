@@ -9,6 +9,7 @@ import {
 import { env } from "cloudflare:workers";
 import { weatherAgent } from "./agents/weather-agent";
 import { weatherMcpServer } from "./mcp/weather-mcp-server";
+import { weatherTool } from "./tools/weather-tool";
 import { weatherWorkflow } from "./workflows/weather-workflow";
 
 const lazyDB = new Proxy({} as D1Database, {
@@ -21,6 +22,7 @@ const lazyDB = new Proxy({} as D1Database, {
 export const mastra = new Mastra({
   workflows: { weatherWorkflow },
   agents: { weatherAgent },
+  tools: { weatherTool },
   mcpServers: { weatherMcpServer },
   storage: new D1Store({ id: "mastra-storage", binding: lazyDB }),
   logger: new ConsoleLogger({

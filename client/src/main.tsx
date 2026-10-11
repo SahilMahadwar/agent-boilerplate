@@ -1,9 +1,12 @@
+import { QueryClientProvider } from "@tanstack/react-query";
+import { createRouter, RouterProvider } from "@tanstack/react-router";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { App } from "./App";
+import { NotFound, PageSkeleton, RouteError } from "./components/query-states";
 import "./index.css";
+import { orpc, queryClient } from "./lib/orpc";
+import { routeTree } from "./routeTree.gen";
 
-// shadcn themes off a `.dark` class, so mirror the OS setting onto <html>.
 const dark = window.matchMedia("(prefers-color-scheme: dark)");
 const applyTheme = (matches: boolean) =>
   document.documentElement.classList.toggle("dark", matches);
@@ -11,8 +14,27 @@ const applyTheme = (matches: boolean) =>
 applyTheme(dark.matches);
 dark.addEventListener("change", (event) => applyTheme(event.matches));
 
+const router = createRouter({
+  routeTree,
+  context: { queryClient, orpc },
+  defaultPreload: "intent",
+  defaultPreloadStaleTime: 0,
+  scrollRestoration: true,
+  defaultPendingComponent: PageSkeleton,
+  defaultErrorComponent: RouteError,
+  defaultNotFoundComponent: NotFound,
+});
+
+declare module "@tanstack/react-router" {
+  interface Register {
+    router: typeof router;
+  }
+}
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <App />
+    <QueryClientProvider client={queryClient}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>
   </StrictMode>,
 );

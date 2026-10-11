@@ -4,10 +4,12 @@ import {
   type HonoVariables,
   MastraServer,
 } from "@mastra/hono";
-import { Hono } from "hono";
+import { type Context, Hono } from "hono";
 import { mastra } from "./mastra/index.js";
-import { example } from "./routes/example.js";
 import { oauth } from "./routes/oauth.js";
+import { openApiHandler, rpcHandler } from "./rpc/index.js";
+import type { RpcContext } from "./rpc/orpc.js";
+import { runDueSchedules } from "./schedules/runner.js";
 
 // The MCP endpoint ChatGPT and Claude connect to. Only this path is served from
 // `/api/mcp/*`, and it requires an OAuth access token (see `providerFor`).
@@ -24,8 +26,30 @@ app.use("/api/mcp/*", async (c, next) => {
   await next();
 });
 
-// Custom routes.
-app.route("/api/example", example);
+// Custom endpoints are oRPC procedures (src/rpc/routers). The SPA calls
+// them through `/api/rpc`; `/api/openapi` serves the same procedures as REST plus
+// an API reference. Mastra and MCP routes are untouched.
+const rpcContext = (c: Context): RpcContext => ({
+  waitUntil: (promise) => c.executionCtx.waitUntil(promise),
+  headers: c.req.raw.headers,
+});
+
+app.use("/api/rpc/*", async (c, next) => {
+  const { matched, response } = await rpcHandler.handle(c.req.raw, {
+    prefix: "/api/rpc",
+    context: rpcContext(c),
+  });
+  return matched ? c.newResponse(response.body, response) : next();
+});
+
+app.use("/api/openapi/*", async (c, next) => {
+  const { matched, response } = await openApiHandler.handle(c.req.raw, {
+    prefix: "/api/openapi",
+    context: rpcContext(c),
+  });
+  return matched ? c.newResponse(response.body, response) : next();
+});
+
 app.route("/", oauth);
 
 app.get("/api/health", (c) =>
@@ -75,5 +99,10 @@ function providerFor(origin: string) {
 export default {
   fetch(request, env, ctx) {
     return providerFor(new URL(request.url).origin).fetch(request, env, ctx);
+  },
+  // Cron trigger (wrangler.jsonc `triggers.crons`): fires due rows of the
+  // `app_schedules` table. Mastra's own scheduler can't run on Workers.
+  scheduled(_controller, _env, ctx) {
+    ctx.waitUntil(runDueSchedules());
   },
 } satisfies ExportedHandler<Env>;

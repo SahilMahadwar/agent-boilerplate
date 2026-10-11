@@ -7,7 +7,12 @@
     "strict": true,
     "skipLibCheck": true,
     "verbatimModuleSyntax": true,
-    "noEmit": true,
+    // Emits declarations only, so the client can import `type AppRouterClient`
+    // through a project reference without type-checking worker code itself.
+    "composite": true,
+    "emitDeclarationOnly": true,
+    "outDir": "node_modules/.cache/tsc/worker",
+    "tsBuildInfoFile": "node_modules/.cache/tsc/worker/tsconfig.worker.tsbuildinfo",
     "allowImportingTsExtensions": true,
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",

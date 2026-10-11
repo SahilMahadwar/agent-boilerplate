@@ -14,5 +14,8 @@
       "@/*": ["./client/src/*"]
     }
   },
-  "include": ["client"]
+  "include": ["client"],
+  // Gives the client the worker's declarations (the oRPC router type) without
+  // compiling worker code under browser types.
+  "references": [{ "path": "./tsconfig.worker.json" }]
 }
